@@ -1,11 +1,11 @@
-CREATE SCHEME delegacia;
+CREATE SCHEMA Delegacia;
 
 SET search_path to delegacia;
 
 -- Definição dos "orgaos" da Delegacia
 CREATE TABLE departamento
 (
-    numdep      INT             UNIQUE NOT NULL,
+    numdep      CHAR(5)             UNIQUE NOT NULL,
 
 PRIMARY KEY (numdep)
 );
@@ -13,7 +13,7 @@ PRIMARY KEY (numdep)
 
 CREATE TABLE unidade 
 (
-    numuni      INT             UNIQUE NOT NULL,
+    numuni      CHAR(3)             UNIQUE NOT NULL,
 
 PRIMARY KEY (numuni)
 );
@@ -35,9 +35,10 @@ CREATE TABLE oficial
     patente         VARCHAR(30)     NOT NULL,
     cargahoraria    INT,
     status          VARCHAR(30)     NOT NULL,
-    deptpertencente INT,        
+    deptpertencente CHAR(5),
 
-PRIMARY KEY (numdist)
+CHECK (status IN ('On Duty', 'Active', 'Inactive', 'In Vacation', 'On Leave', 'Suspended', 'Deceased')),
+PRIMARY KEY (numdist),
 FOREIGN KEY (deptpertencente) REFERENCES departamento (numdep)
 );
 
@@ -77,7 +78,7 @@ FOREIGN KEY (numdistcapitao) REFERENCES capitao (numdist)
 CREATE TABLE subalterno
 (
     numdist         CHAR (9)        UNIQUE NOT NULL,
-    unidadepert     INT             NOT NULL,
+    unidadepert     CHAR(3)             NOT NULL,
     
 
 PRIMARY KEY (numdist),
@@ -118,12 +119,11 @@ FOREIGN KEY (idequipe) REFERENCES equipe (idequipe)
 CREATE TABLE gerencia_depto
 (
     numdistcomissario  VARCHAR (9)      UNIQUE NOT NULL,
-    numdep             INT              UNIQUE NOT NULL,
+    numdep             CHAR(5)          UNIQUE NOT NULL,
     iniciogestao       DATE             NOT NULL,
     fimgestao          DATE,
 
-PRIMARY KEY (numdistcomissario),
-PRIMARY KEY (numdep),
+PRIMARY KEY (numdistcomissario,numdep),
 FOREIGN KEY (numdistcomissario) REFERENCES comissario (numdist),
 FOREIGN KEY (numdep) REFERENCES departamento (numdep)
 );
@@ -131,14 +131,13 @@ FOREIGN KEY (numdep) REFERENCES departamento (numdep)
 CREATE TABLE gerencia_unidade
 (
     numdistcapitao  VARCHAR (9)         UNIQUE NOT NULL,
-    numuni          INT                 UNIQUE NOT NULL,
+    numuni          CHAR(3)             UNIQUE NOT NULL,
     iniciogestao    DATE                NOT NULL,
     fimgestao       DATE,
 
-PRIMARY KEY (numdistcapitao),
-PRIMARY KEY (numuni),
+PRIMARY KEY (numdistcapitao, numuni),
 FOREIGN KEY (numdistcapitao) REFERENCES capitao (numdist),
-FOREIGN KEY (numuni) REFERENCES undiade (numuni)
+FOREIGN KEY (numuni) REFERENCES unidade (numuni) 
 );
 
 CREATE TABLE agente_equipe
@@ -148,8 +147,7 @@ CREATE TABLE agente_equipe
     iniciolocab     DATE            NOT NULL,
     fimcolab        DATE,
 
-PRIMARY KEY (numdist),
-PRIMARY KEY (idequipe),
+PRIMARY KEY (numdist, idequipe),
 FOREIGN KEY (numdist) REFERENCES agenteDeCampo (numdist),
 FOREIGN KEY (idequipe) REFERENCES equipe (idequipe)
 );
@@ -174,11 +172,10 @@ PRIMARY KEY (SSN)
 
 CREATE TABLE dependente 
 (
-    ssn             CHAR (9)        UNIQUE NOT NULL,
-    numdistoficial  CHAR (9)        UNIQUE NOT NULL,
+    ssn             CHAR (9)        NOT NULL,
+    numdistoficial  CHAR (9)        NOT NULL,
 
-PRIMARY KEY (ssn),
-PRIMARY KEY (numdistoficial),
+PRIMARY KEY (ssn, numdistoficial),
 FOREIGN KEY (numdistoficial) REFERENCES  oficial(numdist),
 FOREIGN KEY (ssn) REFERENCES  cidadao(ssn)
 );
@@ -207,11 +204,12 @@ CREATE TABLE relato
     status              VARCHAR (30),
     prioridade          INT             NOT NULL,
     idequipe_acionada   CHAR (9),
-    numdist_atendente   CHAR (9)        UNIQUE NOT NULL,
+    numdist_atendente   CHAR (9)        NOT NULL,
     ssn_cidadao         CHAR (9),
 
 
-CHECK (status IN ('Em andamento', 'Resolvido', 'Arquivado'))
+CHECK (status IN ('In Progress', 'Finished', 'Archived', 'Closed', 'In Queue')),
+
 PRIMARY KEY (idrelato),
 FOREIGN KEY (idequipe_acionada) REFERENCES equipe (idequipe),
 FOREIGN KEY (numdist_atendente) REFERENCES atendente (numdist),
@@ -228,9 +226,11 @@ CREATE TABLE caso
     status                  VARCHAR (30)        NOT NULL,
     prioridade              INT                 NOT NULL,
     idequipe_encarregada    CHAR (9),
-    numdist_responsavel     CHAR (9)            UNIQUE NOT NULL,
+    numdist_responsavel     CHAR (9)            NOT NULL,
 
-PRIMARY (idcaso),
+CHECK (status IN ('In Progress', 'Finished', 'Archived', 'Closed', 'In Queue')),
+
+PRIMARY KEY (idcaso),
 FOREIGN KEY (idequipe_encarregada) REFERENCES  equipe(idequipe),
 FOREIGN KEY (numdist_responsavel) REFERENCES  oficial(numdist)
 );
@@ -244,12 +244,17 @@ CREATE TABLE prova
     descricao               VARCHAR (1000),
     tipo                    CHAR (30)           NOT NULL,
     datacoleta              DATE                NOT NULL,
-    integridade             VARCHAR (30)        NOT NULL,
+    integridade             VARCHAR (30)        NOT NULL DEFAULT 'Not Verified',
+    estado                  VARCHAR (15),
+    autenticidade           VARCHAR (15),
+    relevancia              VARCHAR (15),
     ssn_depoente            char(9),
 
-PRIMARY KEY (idprova),
-PRIMARY KEY (idcaso_associado),
-PRIMARY KEY (equipe_encarregada),
+CHECK (integridade IN ('Not Verified', 'Valid', 'Partial', 'Misleading', 'Inconclusive', 'Invalid') ),
+CHECK (estado in ('Intact', 'Compromised', 'Damaged', 'Corrupted', 'Partial')),
+CHECK (autenticidade IN ('Authentic', 'Tampered', 'Fabricated')),
+
+PRIMARY KEY (idprova, idcaso_associado),
 FOREIGN KEY (idcaso_associado) REFERENCES caso(idcaso),
 FOREIGN KEY (equipe_encarregada) REFERENCES equipe(idequipe),
 FOREIGN KEY (ssn_depoente) REFERENCES cidadao(ssn)
@@ -264,8 +269,7 @@ CREATE TABLE acusado
     idcaso_associado    CHAR (15)       NOT NULL,
     grau_envolvimento   CHAR (30)       NOT NULL,
 
-PRIMARY KEY (ssn_acusado),
+PRIMARY KEY (ssn_acusado, idcaso_associado),
 FOREIGN KEY (ssn_acusado) REFERENCES cidadao(ssn),
-PRIMARY KEY (idcaso_associado),
 FOREIGN KEY (idcaso_associado) REFERENCES caso(idcaso)
 );
