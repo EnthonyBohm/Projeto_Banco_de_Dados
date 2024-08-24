@@ -13,8 +13,7 @@ class Aplication (tk.Tk):
         self.columnconfigure(3)
         self.config(width=600, height=400)
         self.change_background_img('pre_validacao.png')
-        # self.user_validation()
-        self.mainframe()
+        self.user_validation()
         
         
         
@@ -73,12 +72,20 @@ class Aplication (tk.Tk):
         self.mlabel1 = tk.Label (self.frame, text='Welcome to the R.P.D. System', anchor='center', )
         self.mlabel1.grid(row=0, column=1)
         
-        self.button_list = tk.Button (
+        self.officer_list = tk.Button (
             self.frame,
             text='List all Oficers',
             command=self.listOfficers
         )
-        self.button_list.grid(row=1, column=0)
+        self.officer_list.grid(row=1, column=0)
+        
+        self.civilian_list = tk.Button (
+            self.frame,
+            text='List Civilians',
+            command=self.listCivilians
+        )
+        self.civilian_list.grid(row=1, column=1)
+        
     
     def listOfficers (self):
         SQL_Command= f"""SELECT pnome, unome, sexo, email, numdist, anosprofissao, patente, status FROM delegacia.oficial"""
@@ -98,7 +105,28 @@ class Aplication (tk.Tk):
                 m['text'] += f' {column}, '
                 
             m['text'] += '; \n'
+    
+    
+    def listCivilians (self):
+        SQL_Command= f"""SELECT pnome, unome, sexo, email, ssn, profissao FROM delegacia.cidadao"""
+        self.cursor.execute(SQL_Command)
+        self.popup = tk.Tk()
+        self.popup.config(width=200, height=400)
+        self.msg = tk.Label (self.popup, text='', justify='left')
+        self.msg.grid()
         
+        rows = self.cursor.fetchall()
+        i=0
+        m = self.msg
+        for row in rows:
+            m['text'] += f'{i}. '
+            i+=1
+            for column in row:
+                m['text'] += f' {column}, '
+                
+            m['text'] += '; \n'
+            
+    
 def conncect_to_bd ():
     connection_str = (
         "DRIVER={PostgreSQL Unicode};"

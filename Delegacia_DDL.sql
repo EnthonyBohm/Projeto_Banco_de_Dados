@@ -118,8 +118,8 @@ FOREIGN KEY (idequipe) REFERENCES equipe (idequipe)
 -- Definição dos relacionamentos entre as entidades definidas até agora (Delegacia - oficiais /  oficiais - equipe)
 CREATE TABLE gerencia_depto
 (
-    numdistcomissario  VARCHAR (9)      UNIQUE NOT NULL,
-    numdep             CHAR(5)          UNIQUE NOT NULL,
+    numdistcomissario  VARCHAR (9)      NOT NULL,
+    numdep             CHAR(5)          NOT NULL,
     iniciogestao       DATE             NOT NULL,
     fimgestao          DATE,
 
@@ -130,8 +130,8 @@ FOREIGN KEY (numdep) REFERENCES departamento (numdep)
 
 CREATE TABLE gerencia_unidade
 (
-    numdistcapitao  VARCHAR (9)         UNIQUE NOT NULL,
-    numuni          CHAR(3)             UNIQUE NOT NULL,
+    numdistcapitao  VARCHAR (9)         NOT NULL,
+    numuni          CHAR(3)             NOT NULL,
     iniciogestao    DATE                NOT NULL,
     fimgestao       DATE,
 
