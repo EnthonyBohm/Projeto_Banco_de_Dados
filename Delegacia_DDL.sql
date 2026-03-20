@@ -135,7 +135,7 @@ CREATE TABLE gerencia_unidade
     iniciogestao    DATE                NOT NULL,
     fimgestao       DATE,
 
-PRIMARY KEY (numdistcapitao, numuni),
+PRIMARY KEY (numdistcapitao, numuni, iniciogestao), -- Foi alterado chave primaria
 FOREIGN KEY (numdistcapitao) REFERENCES capitao (numdist),
 FOREIGN KEY (numuni) REFERENCES unidade (numuni) 
 );

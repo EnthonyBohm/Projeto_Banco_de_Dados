@@ -1,0 +1,71 @@
+// VERIFICA CASOS EM ABERTO
+Select idcaso, descricao
+FROM caso as c
+WHERE c.status='In Progress'
+
+
+// VERIFICA TODOS OS ENVOLVIDOS EM UM CASO
+SELECT P.pnome, P.unome, A.grau_envolvimento
+FROM cidadao AS P
+JOIN acusado AS a ON p.ssn = a.ssn_acusado
+JOIN caso AS c ON c.idcaso = a.idcaso_associado
+WHERE c.idcaso='C00000001'
+
+
+// VERIFICA O HISTÓRICO CRIMINAL
+SELECT caso.idcaso, caso.descricao, cidadao.pnome, cidadao.unome, acusado.grau_envolvimento
+FROM caso
+JOIN acusado ON caso.idcaso = acusado.idcaso_associado
+JOIN cidadao ON acusado.ssn_acusado = cidadao.ssn
+WHERE cidadao.pnome = 'Robert' AND cidadao.unome = 'Williams';
+
+
+//VERIFICA TODAS AS PROVAS DE UM CASO
+SELECT p.descricao, p.tipo, p.integridade
+FROM prova AS p
+JOIN caso ON p.idcaso_associado = caso.idcaso
+WHERE idcaso = 'C00000001';
+
+
+//VERIFICA TODOS OS CASOS ASSOCIADOS A UM POLICIAL
+SELECT idcaso, descricao, caso.status
+FROM caso
+JOIN oficial ON caso.numdist_responsavel=oficial.numdist
+WHERE oficial.pnome = 'James' AND oficial.unome = 'Moore'
+
+
+// VERIFICA PARA CADA UNIDADE QUAIS SAO OS OFICIAIS QUE FAZEM PARTE
+SELECT oficial.pnome,oficial.unome, oficial.patente, unidade.numuni
+FROM oficial
+JOIN subalterno ON oficial.numdist = subalterno.numdist
+JOIN unidade ON subalterno.unidadepert = unidade.numuni
+ORDER BY (unidade.numuni, oficial.patente, oficial.pnome, oficial.unome)
+
+// VERIFICA OS CAPITAES DE CADA UNIDADE
+SELECT oficial.pnome,oficial.unome, oficial.patente, unidade.numuni
+FROM oficial
+JOIN capitao ON oficial.numdist = capitao.numdist
+JOIN gerencia_unidade ON oficial.numdist=gerencia_unidade.numdistcapitao
+JOIN unidade ON gerencia_unidade.numuni=unidade.numuni
+ORDER BY (unidade.numuni, oficial.pnome, oficial.unome)
+
+
+
+// VERIFICA TODOS OS OFICIAIS ASSOCIADOS COM OS CAPITAES DE SUAS UNIDADES
+SELECT 
+    subordinado.pnome, subordinado.unome, subordinado.patente, subalterno.unidadepert,
+    orientador.pnome, orientador.unome, orientador.patente
+FROM
+    oficial as orientador
+JOIN 
+    capitao ON orientador.numdist = capitao.numdist
+JOIN
+    gerencia_unidade ON gerencia_unidade.numdistcapitao = capitao.numdist
+JOIN 
+    unidade ON unidade.numuni = gerencia_unidade.numuni
+JOIN 
+    subalterno ON subalterno.unidadepert=unidade.numuni
+JOIN
+    oficial as subordinado ON subalterno.numdist = subordinado.numdist
+
+ORDER BY (unidadepert)
